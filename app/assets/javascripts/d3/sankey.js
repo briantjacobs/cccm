@@ -4,7 +4,10 @@ d3.sankey = function() {
       nodePadding = 8,
       size = [1, 1],
       nodes = [],
-      links = [];
+      links = [],
+      sourceKey = 'source',
+      targetKey = 'target',
+      valueKey = 'value';
 
   sankey.nodeWidth = function(_) {
     if (!arguments.length) return nodeWidth;
@@ -36,6 +39,21 @@ d3.sankey = function() {
     return sankey;
   };
 
+  sankey.keys = function(_) {
+    if (!arguments.length) return keys;
+
+    if (_.source) {
+      sourceKey = _.source;
+    }
+    if (_.target) {
+      targetKey = _.target;
+    }
+    if (_.target) {
+      valueKey = _.value;
+    }
+    return sankey;
+  };
+
   sankey.layout = function(iterations) {
     computeNodeLinks();
     computeNodeValues();
@@ -54,13 +72,13 @@ d3.sankey = function() {
     var curvature = .5;
 
     function link(d) {
-      var x0 = d.source.x + d.source.dx,
-          x1 = d.target.x,
+      var x0 = d[sourceKey].x + d[sourceKey].dx,
+          x1 = d[targetKey].x,
           xi = d3.interpolateNumber(x0, x1),
           x2 = xi(curvature),
           x3 = xi(1 - curvature),
-          y0 = d.source.y + d.sy + d.dy / 2,
-          y1 = d.target.y + d.ty + d.dy / 2;
+          y0 = d[sourceKey].y + d.sy + d.dy / 2,
+          y1 = d[targetKey].y + d.ty + d.dy / 2;
       return "M" + x0 + "," + y0
            + "C" + x2 + "," + y0
            + " " + x3 + "," + y1
@@ -84,10 +102,10 @@ d3.sankey = function() {
       node.targetLinks = [];
     });
     links.forEach(function(link) {
-      var source = link.source,
-          target = link.target;
-      if (typeof source === "number") source = link.source = nodes[link.source];
-      if (typeof target === "number") target = link.target = nodes[link.target];
+      var source = link[sourceKey],
+          target = link[targetKey];
+      if (typeof source === "number") source = link[sourceKey]= nodes[link[sourceKey]];
+      if (typeof target === "number") target = link[targetKey] = nodes[link[targetKey]];
       source.sourceLinks.push(link);
       target.targetLinks.push(link);
     });
@@ -96,7 +114,7 @@ d3.sankey = function() {
   // Compute the value (size) of each node by summing the associated links.
   function computeNodeValues() {
     nodes.forEach(function(node) {
-      node.value = Math.max(
+      node[valueKey] = Math.max(
         d3.sum(node.sourceLinks, value),
         d3.sum(node.targetLinks, value)
       );
@@ -118,7 +136,7 @@ d3.sankey = function() {
         node.x = x;
         node.dx = nodeWidth;
         node.sourceLinks.forEach(function(link) {
-          nextNodes.push(link.target);
+          nextNodes.push(link[targetKey]);
         });
       });
       remainingNodes = nextNodes;
@@ -133,7 +151,7 @@ d3.sankey = function() {
   function moveSourcesRight() {
     nodes.forEach(function(node) {
       if (!node.targetLinks.length) {
-        node.x = d3.min(node.sourceLinks, function(d) { return d.target.x; }) - 1;
+        node.x = d3.min(node.sourceLinks, function(d) { return d[targetKey].x; }) - 1;
       }
     });
   }
@@ -177,12 +195,12 @@ d3.sankey = function() {
       nodesByBreadth.forEach(function(nodes) {
         nodes.forEach(function(node, i) {
           node.y = i;
-          node.dy = node.value * ky;
+          node.dy = node[valueKey] * ky;
         });
       });
 
       links.forEach(function(link) {
-        link.dy = link.value * ky;
+        link.dy = link[valueKey] * ky;
       });
     }
 
@@ -197,7 +215,7 @@ d3.sankey = function() {
       });
 
       function weightedSource(link) {
-        return center(link.source) * link.value;
+        return center(link[sourceKey]) * link[valueKey];
       }
     }
 
@@ -212,7 +230,7 @@ d3.sankey = function() {
       });
 
       function weightedTarget(link) {
-        return center(link.target) * link.value;
+        return center(link[targetKey]) * link[valueKey];
       }
     }
 
@@ -272,11 +290,11 @@ d3.sankey = function() {
     });
 
     function ascendingSourceDepth(a, b) {
-      return a.source.y - b.source.y;
+      return a[sourceKey].y - b[sourceKey].y;
     }
 
     function ascendingTargetDepth(a, b) {
-      return a.target.y - b.target.y;
+      return a[targetKey].y - b[targetKey].y;
     }
   }
 
@@ -285,7 +303,7 @@ d3.sankey = function() {
   }
 
   function value(link) {
-    return link.value;
+    return link[valueKey];
   }
 
   return sankey;

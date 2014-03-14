@@ -11,15 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140313223633) do
-
-  create_table "donors", force: true do |t|
-    t.string "grantmaker_group"
-    t.string "grantmaker_name"
-    t.string "grantmaker_state"
-  end
-
-  add_index "donors", ["grantmaker_group"], name: "index_donors_on_grantmaker_group", unique: true
+ActiveRecord::Schema.define(version: 20140314184216) do
 
   create_table "grants", force: true do |t|
     t.integer "donor_id"
@@ -30,13 +22,13 @@ ActiveRecord::Schema.define(version: 20140313223633) do
     t.string  "description"
   end
 
-  create_table "recipients", force: true do |t|
-    t.integer "grants_id"
-    t.string  "recipient_name"
-    t.string  "recipient_city"
-    t.string  "recipient_state"
+  create_table "orgs", force: true do |t|
+    t.string "group"
+    t.string "name"
+    t.string "state"
+    t.string "city"
   end
 
-  add_index "recipients", ["recipient_name"], name: "index_recipients_on_recipient_name", unique: true
+  add_index "orgs", ["name"], name: "index_orgs_on_name", unique: true
 
 end
