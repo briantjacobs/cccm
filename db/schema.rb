@@ -22,8 +22,8 @@ ActiveRecord::Schema.define(version: 20140313223633) do
   add_index "donors", ["grantmaker_group"], name: "index_donors_on_grantmaker_group", unique: true
 
   create_table "grants", force: true do |t|
-    t.integer "donors_id"
-    t.integer "recipients_id"
+    t.integer "donor_id"
+    t.integer "recipient_id"
     t.integer "year_authorized"
     t.float   "grant_amount"
     t.string  "support_type"

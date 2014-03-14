@@ -13,7 +13,18 @@ class GrantsController < ApplicationController
 
     @grants_nodes = Grant.select("grantmaker_group").group("grantmaker_group")
 
-    @grants_nodes.each
+    @recipients = Recipient.select("*")
+
+    @donors = Donor.select("*")
+
+    @grants = Grant.select("*")
+
+    # thing = Grant.includes(:donor, :recipient).first
+
+    # @nodes = Grant.includes(posts: [{comments: :guest}, :tags]).find(1)
+
+    @nodes = (@donors + @recipients)
+    @links = Grant.all
 
     # for each record
         # if the record doesnt exist, make an id for it, if not, fetch it
