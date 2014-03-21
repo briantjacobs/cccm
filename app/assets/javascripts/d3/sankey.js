@@ -8,12 +8,13 @@ d3.sankey = function() {
       size = [1, 1],
       nodes = [],
       links = [],
-      linkSchema = {
+      useSchema = false,
+      schema = {
+        id: 'id',
         source: 'source',
         target: 'target',
         value: 'value'
-      },
-      nodeSchema = {id: undefined};
+      };
 
   sankey.nodeWidth = function(_) {
     if (!arguments.length) return nodeWidth;
@@ -45,27 +46,34 @@ d3.sankey = function() {
     return sankey;
   };
 
-  sankey.linkSchema = function(_) {
-    if (!arguments.length) return linkSchema;
+  sankey.schema = function(_) {
+    if (!arguments.length) {
+      return schema;
+    } else {
+      useSchema = true
+    }
     if (_.source) {
-      linkSchema.source = _.source;
+      schema.source = _.source;
     }
     if (_.target) {
-      linkSchema.target = _.target;
+      schema.target = _.target;
     }
-    if (_.target) {
-      linkSchema.value = _.value;
+    if (_.value) {
+      schema.value = _.value;
+    }
+    if (_.id) {
+      schema.id = _.id;
     }
     return sankey;
   };
 
-  sankey.nodeSchema = function(_) {
-    if (!arguments.length) return nodeSchema;
-    if (_.id) {
-      nodeSchema.id = _.id;
-    }
-    return sankey;
-  };
+  // sankey.nodeSchema = function(_) {
+  //   if (!arguments.length) return nodeSchema;
+  //   if (_.id) {
+  //     schema.id = _.id;
+  //   }
+  //   return sankey;
+  // };
 
 
   sankey.layout = function(iterations) {
@@ -86,13 +94,13 @@ d3.sankey = function() {
     var curvature = .5;
 
     function link(d) {
-      var x0 = d[linkSchema.source].x + d[linkSchema.source].dx,
-          x1 = d[linkSchema.target].x,
+      var x0 = d[schema.source].x + d[schema.source].dx,
+          x1 = d[schema.target].x,
           xi = d3.interpolateNumber(x0, x1),
           x2 = xi(curvature),
           x3 = xi(1 - curvature),
-          y0 = d[linkSchema.source].y + d.sy + d.dy / 2,
-          y1 = d[linkSchema.target].y + d.ty + d.dy / 2;
+          y0 = d[schema.source].y + d.sy + d.dy / 2,
+          y1 = d[schema.target].y + d.ty + d.dy / 2;
       return "M" + x0 + "," + y0
            + "C" + x2 + "," + y0
            + " " + x3 + "," + y1
@@ -116,13 +124,20 @@ d3.sankey = function() {
       node.targetLinks = [];
     });
     links.forEach(function(link) {
-      var source = link[linkSchema.source],
-          target = link[linkSchema.target];
+      var source = link[schema.source],
+          target = link[schema.target];
 // find by specified id rather than  index within array 
   
+  //if you check by number then ids that are numbers wont work. 
+  //all IDs must be unique
 
-      if (typeof source === "number") source = link[linkSchema.source] = nodes.filter(function(nodeFilter) {return nodeFilter[nodeSchema.id] == link[linkSchema.source];})[0];
-      if (typeof target === "number") target = link[linkSchema.target] = nodes.filter(function(nodeFilter) {return nodeFilter[nodeSchema.id] == link[linkSchema.target];})[0];
+      if (useSchema) {
+        source = link[schema.source] = nodes.filter(function(nodeFilter) {return nodeFilter[schema.id] == link[schema.source];})[0];
+        target = link[schema.target] = nodes.filter(function(nodeFilter) {return nodeFilter[schema.id] == link[schema.target];})[0];
+      } else {
+        if (typeof source === "number") source = link[schema.source] = nodes[link[schema.source]];
+        if (typeof target === "number") target = link[schema.target] = nodes[link[schema.target]];
+      }
       source.sourceLinks.push(link);
       target.targetLinks.push(link);
     });
@@ -131,7 +146,7 @@ d3.sankey = function() {
   // Compute the value (size) of each node by summing the associated links.
   function computeNodeValues() {
     nodes.forEach(function(node) {
-      node[linkSchema.value] = Math.max(
+      node[schema.value] = Math.max(
         d3.sum(node.sourceLinks, value),
         d3.sum(node.targetLinks, value)
       );
@@ -153,7 +168,7 @@ d3.sankey = function() {
         node.x = x;
         node.dx = nodeWidth;
         node.sourceLinks.forEach(function(link) {
-          nextNodes.push(link[linkSchema.target]);
+          nextNodes.push(link[schema.target]);
         });
       });
       remainingNodes = nextNodes;
@@ -168,7 +183,7 @@ d3.sankey = function() {
   function moveSourcesRight() {
     nodes.forEach(function(node) {
       if (!node.targetLinks.length) {
-        node.x = d3.min(node.sourceLinks, function(d) { return d[linkSchema.target].x; }) - 1;
+        node.x = d3.min(node.sourceLinks, function(d) { return d[schema.target].x; }) - 1;
       }
     });
   }
@@ -193,7 +208,7 @@ d3.sankey = function() {
         .sortKeys(d3.ascending)
         .entries(nodes)
         .map(function(d) { return d.values; });
-console.log(nodesByBreadth)
+
     //
     initializeNodeDepth();
     resolveCollisions();
@@ -212,12 +227,12 @@ console.log(nodesByBreadth)
       nodesByBreadth.forEach(function(nodes) {
         nodes.forEach(function(node, i) {
           node.y = i;
-          node.dy = node[linkSchema.value] * ky;
+          node.dy = node[schema.value] * ky;
         });
       });
 
       links.forEach(function(link) {
-        link.dy = link[linkSchema.value] * ky;
+        link.dy = link[schema.value] * ky;
       });
     }
 
@@ -232,7 +247,7 @@ console.log(nodesByBreadth)
       });
 
       function weightedSource(link) {
-        return center(link[linkSchema.source]) * link[linkSchema.value];
+        return center(link[schema.source]) * link[schema.value];
       }
     }
 
@@ -247,7 +262,7 @@ console.log(nodesByBreadth)
       });
 
       function weightedTarget(link) {
-        return center(link[linkSchema.target]) * link[linkSchema.value];
+        return center(link[schema.target]) * link[schema.value];
       }
     }
 
@@ -307,11 +322,11 @@ console.log(nodesByBreadth)
     });
 
     function ascendingSourceDepth(a, b) {
-      return a[linkSchema.source].y - b[linkSchema.source].y;
+      return a[schema.source].y - b[schema.source].y;
     }
 
     function ascendingTargetDepth(a, b) {
-      return a[linkSchema.target].y - b[linkSchema.target].y;
+      return a[schema.target].y - b[schema.target].y;
     }
   }
 
@@ -320,7 +335,7 @@ console.log(nodesByBreadth)
   }
 
   function value(link) {
-    return link[linkSchema.value];
+    return link[schema.value];
   }
 
   return sankey;

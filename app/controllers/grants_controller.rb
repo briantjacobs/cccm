@@ -23,13 +23,16 @@ class GrantsController < ApplicationController
 
     # @nodes = Grant.includes(posts: [{comments: :guest}, :tags]).find(1)
 
+    # @nodes = Grant.joins(:orgs).where(year_authorized: 2005) #Org.all
     @nodes = Org.all
-    @links = Grant.all #.where(year_authorized: 2005)
+    # @nodes = Org.all.joins(:grants)
+    # @nodes = Org.joins("INNER JOIN grants on donor_id = grants.id")
+    @links = Grant.where(year_authorized: 2005)
+# Author.joins(:posts).where(posts: {author: author})
 
-
-    @uniqDonors = Grant.uniq.pluck(:donor_id) - Grant.uniq.pluck(:recipient_id)
+    # @uniqDonors = Grant.uniq.pluck(:donor_id) - Grant.uniq.pluck(:recipient_id)
     
-    puts @uniqDonors.to_json
+    # puts @uniqDonors.to_json
 
     # for each record
         # if the record doesnt exist, make an id for it, if not, fetch it

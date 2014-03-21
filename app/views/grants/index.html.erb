@@ -1,7 +1,38 @@
+
+saaassssssssaddddd
 <div id="chart"></div>
 
 <script type="text/javascript">
-var energy = {nodes: <%= raw  @nodes.to_json %>, links: <%= raw  @links.to_json %>}	
+var energy = {nodes: <%= raw  @nodes.to_json %>, links: <%= raw  @links.to_json %>}	 
+
+// var energy = {"nodes":[
+// {"name":"A"},
+// {"name":"B"},
+// {"name":"C"}, 
+// {"name":"D"},
+// {"name":"E"},
+// {"name":"F"},
+// {"name":"G"},
+// ],
+// "links":[
+
+// {"source":0,"target":1,"value":2},
+// {"source":1,"target":2,"value":4},
+// {"source":2,"target":3,"value":30},
+// // {"source":2,"target":1,"value":5}, // Looper
+// {"source":4,"target":2,"value":5},
+// {"source":4,"target":5,"value":5},
+// {"source":5,"target":6,"value":5}
+
+// // {"source":0,"target":1,"value":2},
+// // {"source":1,"target":2,"value":4},
+// // {"source":2,"target":3,"value":30},
+// // {"source":2,"target":1,"value":5}, // Looper
+// // {"source":4,"target":2,"value":5},
+// // {"source":4,"target":5,"value":5},
+// // {"source":5,"target":6,"value":5}
+// ]}
+
 
 var margin = {top: 1, right: 1, bottom: 6, left: 1},
     width = 1000 - margin.left - margin.right,
@@ -18,14 +49,12 @@ var svg = d3.select("#chart").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-var linkSchema = {source: "donor_id", target: "recipient_id", value: "grant_amount"};
-var nodeSchema = {id: "id"};
+var schema = {id:"id", source: "donor_id", target: "recipient_id", value: "grant_amount"};
 
 var sankey = d3.sankey()
     .nodeWidth(15)
-    .nodePadding(10)
-    .nodeSchema(nodeSchema)
-    .linkSchema(linkSchema)
+    .nodePadding(40)
+    .schema(schema)
     .size([width, height]);
 
 var path = sankey.link();
@@ -43,7 +72,7 @@ var path = sankey.link();
       .sort(function(a, b) { return b.dy - a.dy; });
 
   link.append("title")
-      .text(function(d) {return d[linkSchema.source].name + " → " + d[linkSchema.target].name + "\n" + format(d[linkSchema.value]); });
+      .text(function(d) {return d[schema.source].name + " → " + d[schema.target].name + "\n" + format(d[schema.value]); });
 
   var node = svg.append("g").selectAll(".node")
       .data(energy.nodes)
